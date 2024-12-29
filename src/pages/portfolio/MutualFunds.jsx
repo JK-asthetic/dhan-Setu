@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Breadcrumbs from "@/components/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -26,11 +26,34 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Dialog, DialogTrigger } from "@radix-ui/react-dialog";
-import { MutualFundDialog } from "@/components/styled_charts/MutualfundDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import axios from "axios";
+import AddMutualFund from "../../components/AddMutualFund";
 
 const MutualFunds = () => {
-  // Sample data for charts
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    fundName: "",
+    fundCategory: "",
+    purchaseAmount: "",
+    purchaseDate: "",
+    navAtPurchase: "",
+    investmentType: "",
+    riskLevel: "",
+    folioNumber: "",
+    fundHouse: "",
+    sipFrequency: "",
+    sipDate: "",
+  });
+  const [loading, setLoading] = useState(false);
+
+  // Sample data for charts - this could be moved to a separate data file
   const overallDistribution = [
     {
       name: "Large Cap Funds",
@@ -134,81 +157,133 @@ const MutualFunds = () => {
       ],
     },
   ];
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const calculateUnits = () => {
+    if (formData.purchaseAmount && formData.navAtPurchase) {
+      return (
+        parseFloat(formData.purchaseAmount) / parseFloat(formData.navAtPurchase)
+      ).toFixed(3);
+    }
+    return "";
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await axios.post("/api/mutual-funds", {
+        ...formData,
+        unitsAllocated: calculateUnits(),
+      });
+
+      if (response.status === 200) {
+        setOpen(false);
+        setFormData({}); // Reset form
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const renderDistributionCard = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <PieChartIcon className="h-5 w-5" />
+          Mutual Funds Distribution
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={overallDistribution}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {overallDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="grid content-center">
+            <div className="space-y-4">
+              {overallDistribution.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="h-4 w-4 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm text-gray-500">{item.amount}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">{item.value}%</p>
+                    <p className="text-sm text-green-600">{item.returns}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="flex h-16 shrink-0 items-center gap-2 bg-white px-4 shadow-sm">
         <Breadcrumbs parent="Portfolio" child="Mutual Funds" />
-        <Dialog>
-          <DialogTrigger >
-            <Button>Add Mutual Funds</Button>
-            <MutualFundDialog />
-          </DialogTrigger>
-        </Dialog>
+        <div>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="ml-auto">Add New Fund</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl bg-white my-5">
+              <DialogHeader>
+                <DialogTitle>Register New Mutual Fund</DialogTitle>
+              </DialogHeader>
+              <AddMutualFund
+                formData={formData}
+                handleInputChange={handleInputChange}
+                loading={loading}
+                calculateUnits={calculateUnits}
+                onCancel={() => setOpen(false)}
+                onSubmit={handleSubmit}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </header>
 
       <div className="flex flex-1 flex-col gap-6 p-4 pt-6">
         {/* Overall Performance Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChartIcon className="h-5 w-5" />
-              Mutual Funds Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={overallDistribution}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {overallDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value, name, props) => [`${value}%`, name]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="grid content-center">
-                <div className="space-y-4">
-                  {overallDistribution.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="h-4 w-4 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-gray-500">{item.amount}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{item.value}%</p>
-                        <p className="text-sm text-green-600">{item.returns}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {renderDistributionCard()}
 
         {/* Funds Accordion */}
         <Card>

@@ -14,7 +14,7 @@ import History from "./pages/History";
 import Funds from "./pages/Funds";
 import Portfolio from "./pages/portfolio/portfolio";
 import MutualFunds from "./pages/portfolio/MutualFunds";
-import AddMutualFund from "./pages/portfolio/AddMutualFund";
+import AddMutualFund from "./components/AddMutualFund";
 
 // import AuthLayout from "./components/AuthLayout";
 
@@ -35,9 +35,9 @@ function App() {
         </Route>
 
         {/* Routes without Sidebar */}
-          <Route path="/register" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Home />} />
+        <Route path="/register" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Home />} />
       </Routes>
     </Router>
   );
