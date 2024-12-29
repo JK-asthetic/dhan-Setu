@@ -9,12 +9,13 @@ import Settings from "./pages/Settings";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
-import Learn from "./pages/Learn";
+import Learn from "./pages/learn/Learn";
 import History from "./pages/History";
 import Funds from "./pages/Funds";
 import Portfolio from "./pages/portfolio/portfolio";
 import MutualFunds from "./pages/portfolio/MutualFunds";
 import AddMutualFund from "./components/AddMutualFund";
+import InvestmentsPage from "./pages/learn/Investments";
 
 // import AuthLayout from "./components/AuthLayout";
 
@@ -32,6 +33,8 @@ function App() {
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/mutualfunds" element={<MutualFunds />} />
           <Route path="/addmutualfunds" element={<AddMutualFund />} />
+          <Route path="/investmenst" element={<InvestmentsPage />} />
+
         </Route>
 
         {/* Routes without Sidebar */}

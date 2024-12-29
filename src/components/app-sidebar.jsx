@@ -60,7 +60,7 @@ const data = {
       items: [
         {
           title: "Invest",
-          url: "#",
+          url: "/investmenst",
         },
         {
           title: "Savings",
